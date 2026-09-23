@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>配置問題・共有テスト</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <section id="start-screen">
+    <header>卒業研究　配置問題・共有テスト</header>
+    <h1>テスト参加のお願い</h1>
+    <p>このテストは、オフィス作業空間における他者存在と作業成績の関係を調べるための課題候補を確認するものです。</p>
+    <div class="notice">
+      <h2>収集するデータ</h2>
+      <ul>
+        <li>参加者ID（氏名・学籍番号は入力しません）</li>
+        <li>各問題の回答、正誤、回答時間</li>
+        <li>テストの開始・終了時刻、テスト版番号</li>
+      </ul>
+      <p>所要時間の目安は5〜10分です。回答途中でも、参加をやめることができます。</p>
+    </div>
+    <label class="field">参加者ID（配布された番号）
+      <input id="participant-id" maxlength="30" autocomplete="off" placeholder="例：P001">
+    </label>
+    <label class="consent"><input id="consent" type="checkbox">説明を読み、テストへの参加に同意します。</label>
+    <p id="start-error" class="error" role="alert"></p>
+    <div class="actions"><button id="start-button" type="button">テストを開始 →</button></div>
+  </section>
+
+  <section id="question-screen" hidden>
+    <header id="question-header"></header>
+    <h1 id="question-title"></h1>
+    <ol id="conditions"></ol>
+    <p>左を1番目として、条件をすべて満たす配置を1つ選んでください。</p>
+    <div id="answer-fields" class="arrangements" role="radiogroup" aria-label="配置の選択肢"></div>
+    <p id="answer-error" class="error" role="alert"></p>
+    <div class="actions"><button id="submit-button" type="button">回答を確定 →</button></div>
+    <div id="clock" class="clock" aria-label="現在時刻"></div>
+  </section>
+
+  <section id="end-screen" hidden>
+    <header>卒業研究　配置問題・共有テスト</header>
+    <h1>回答は終了です。ありがとうございました。</h1>
+    <p id="send-message">回答データを送信しています。この画面を閉じずにお待ちください。</p>
+    <p id="send-error" class="error" role="alert"></p>
+    <div class="actions">
+      <button id="retry-button" type="button" hidden>送信を再試行</button>
+      <button id="backup-button" class="secondary" type="button">結果をCSVで保存</button>
+    </div>
+  </section>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

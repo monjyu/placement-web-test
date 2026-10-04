@@ -32,6 +32,17 @@ li { margin: 6px 0; }
                      margin: 0 0 20px; background: #f3f7fa; border: 1px solid #b9c9d5;
                      border-radius: 9px; }
 .given-arrangement::before { content: "提示された配置"; font-weight: 700; color: #345a79; }
+.arrangement-workbench { margin: 18px 0 24px; padding: 16px 20px; background: #fff9e9;
+                         border: 1px solid #d8bd72; border-radius: 9px; }
+.workbench-heading { margin: 0; font-size: 17px; font-weight: 700; color: #67501b; }
+.workbench-help { margin: 2px 0 12px; font-size: 14px; color: #685e47; }
+.letter-panel { display: flex; gap: 9px; }
+.letter-tile { display: grid; place-items: center; width: 58px; height: 58px; padding: 0;
+               border: 2px solid #6d7780; border-radius: 7px; color: #1b2b3c;
+               background: #fff; font-size: 25px; cursor: grab; }
+.letter-tile:hover { color: #1b2b3c; background: #eef5fa; }
+.letter-tile.selected { border-color: #d38200; background: #fff0bd; box-shadow: 0 0 0 3px #ffd56b; }
+.letter-tile.dragging { opacity: .45; }
 .number-choice { justify-content: center; min-height: 86px; font-size: 25px; font-weight: 700; }
 button { font: inherit; font-size: 18px; font-weight: 700; color: #fff; background: #195b91;
          border: 0; border-radius: 7px; padding: 13px 28px; cursor: pointer; }

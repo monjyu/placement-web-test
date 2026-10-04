@@ -7,8 +7,8 @@ const answerArea = document.getElementById("answer-fields");
 const PROBLEMS = [
   {
     type: "arrangement", answer: "BACD",
-    rules: [R("immediateLeft", "A", "C"), R("notAdjacent", "B", "C"),
-      R("notLeft", "D", "A"), R("left", "B", "A")]
+    rules: [R("left", "B", "A"), R("right", "D", "C"), R("left", "A", "C")],
+    choices: ["BACD", "ABCD", "BADC", "BCAD"]
   },
   {
     type: "arrangement", answer: "CADB",
@@ -17,40 +17,42 @@ const PROBLEMS = [
   },
   {
     type: "arrangement", answer: "DBAC",
-    rules: [R("immediateLeft", "B", "A"), R("notAdjacent", "D", "A"),
-      R("notLeft", "C", "B"), R("notLeft", "B", "D")]
+    rules: [R("immediateLeft", "B", "A"), R("right", "A", "D"),
+      R("right", "C", "B")],
+    choices: ["DBAC", "BDCA", "BACD", "CDBA"]
   },
   {
     type: "arrangement", answer: "ACDB",
-    rules: [R("adjacent", "C", "D"), R("notAdjacent", "A", "D"),
-      R("notLeft", "B", "C"), R("left", "A", "C")]
+    rules: [R("left", "A", "B"), R("notAdjacent", "A", "B"),
+      R("adjacent", "C", "D"), R("notPosition", "C", 3)],
+    choices: ["ACDB", "BADC", "ACBD", "ADCB"]
   },
   {
-    type: "count", answer: 6,
-    rules: [R("left", "A", "B"), R("notAdjacent", "C", "D")]
+    type: "count", answer: 3,
+    rules: [R("position", "A", 1), R("right", "B", "C")]
   },
   {
-    type: "count", answer: 4,
-    rules: [R("adjacent", "A", "B"), R("notLeft", "C", "D"), R("notLeft", "A", "D")]
+    type: "count", answer: 5,
+    rules: [R("right", "D", "A"), R("notPosition", "B", 4), R("adjacent", "B", "C")]
   },
   {
     type: "count", answer: 2,
-    rules: [R("between", "B", "A", "D"), R("notAdjacent", "C", "A"), R("notLeft", "D", "B")]
+    rules: [R("between", "B", "A", "D"), R("right", "C", "A"), R("position", "D", 4)]
   },
   {
     type: "minimum", arrangement: "BACD", answer: 3,
-    rules: [R("left", "A", "C"), R("left", "B", "A"), R("left", "C", "D"),
-      R("notAdjacent", "B", "C"), R("adjacent", "A", "C")]
+    rules: [R("position", "B", 1), R("immediateRight", "A", "B"),
+      R("right", "D", "C"), R("adjacent", "A", "C"), R("notAdjacent", "B", "C")]
   },
   {
-    type: "minimum", arrangement: "CADB", answer: 4,
-    rules: [R("left", "A", "B"), R("left", "A", "D"), R("left", "C", "A"),
-      R("adjacent", "A", "D"), R("notAdjacent", "C", "D")]
+    type: "minimum", arrangement: "CADB", answer: 3,
+    rules: [R("between", "A", "C", "D"), R("immediateLeft", "C", "A"),
+      R("right", "B", "D"), R("notPosition", "D", 1), R("adjacent", "A", "D")]
   },
   {
     type: "minimum", arrangement: "DBAC", answer: 3,
-    rules: [R("left", "A", "C"), R("left", "B", "A"), R("left", "D", "A"),
-      R("adjacent", "A", "B"), R("notAdjacent", "D", "A")]
+    rules: [R("right", "A", "B"), R("position", "D", 1),
+      R("between", "B", "D", "C"), R("notAdjacent", "A", "D"), R("immediateLeft", "B", "A")]
   }
 ];
 
@@ -75,24 +77,32 @@ const ALL_ORDERS = permutations(LETTERS);
 function isMet(order, rule) {
   const p = item => order.indexOf(item);
   if (rule.type === "left") return p(rule.a) < p(rule.b);
+  if (rule.type === "right") return p(rule.a) > p(rule.b);
   if (rule.type === "notLeft") return p(rule.a) >= p(rule.b);
   if (rule.type === "immediateLeft") return p(rule.b) === p(rule.a) + 1;
+  if (rule.type === "immediateRight") return p(rule.a) === p(rule.b) + 1;
   if (rule.type === "adjacent") return Math.abs(p(rule.a) - p(rule.b)) === 1;
   if (rule.type === "notAdjacent") return Math.abs(p(rule.a) - p(rule.b)) !== 1;
   if (rule.type === "between") {
     const middle = p(rule.a), edge1 = p(rule.b), edge2 = p(rule.c);
     return (edge1 < middle && middle < edge2) || (edge2 < middle && middle < edge1);
   }
+  if (rule.type === "position") return p(rule.a) === rule.b - 1;
+  if (rule.type === "notPosition") return p(rule.a) !== rule.b - 1;
   return false;
 }
 
 function ruleText(rule) {
   if (rule.type === "left") return `${rule.a}は${rule.b}より左にある。`;
+  if (rule.type === "right") return `${rule.a}は${rule.b}より右にある。`;
   if (rule.type === "notLeft") return `${rule.a}は${rule.b}より左ではない。`;
   if (rule.type === "immediateLeft") return `${rule.a}は${rule.b}のすぐ左にある。`;
+  if (rule.type === "immediateRight") return `${rule.a}は${rule.b}のすぐ右にある。`;
   if (rule.type === "adjacent") return `${rule.a}と${rule.b}は隣り合っている。`;
   if (rule.type === "notAdjacent") return `${rule.a}と${rule.b}は隣り合っていない。`;
-  return `${rule.a}は${rule.b}と${rule.c}の間にある。`;
+  if (rule.type === "between") return `${rule.a}は${rule.b}と${rule.c}の間にある。`;
+  if (rule.type === "position") return `${rule.a}は${rule.b}番目である。`;
+  return `${rule.a}は${rule.b}番目ではない。`;
 }
 
 function solutions(rules) {
@@ -124,6 +134,14 @@ function validateProblems() {
       const found = solutions(problem.rules);
       if (found.length !== 1 || found[0] !== problem.answer)
         throw new Error(`問${index + 1}: 正解が一意ではありません`);
+      if (problem.choices) {
+        if (new Set(problem.choices).size !== 4 || !problem.choices.includes(problem.answer))
+          throw new Error(`問${index + 1}: 選択肢の設定が不正です`);
+        problem.rules.forEach((rule, ruleIndex) => {
+          if (problem.choices.filter(choice => choice !== problem.answer).every(choice => isMet(choice, rule)))
+            throw new Error(`問${index + 1}: 文章${ruleIndex + 1}が選択肢の絞り込みに使われていません`);
+        });
+      }
     } else if (problem.type === "count") {
       if (solutions(problem.rules).length !== problem.answer)
         throw new Error(`問${index + 1}: 成立数が一致しません`);
@@ -148,6 +166,7 @@ function seededOrder(items, seed) {
 }
 
 function arrangementChoices(problem, number) {
+  if (problem.choices) return seededOrder(problem.choices, 910 + number * 23);
   const distractors = ALL_ORDERS.filter(order => order !== problem.answer)
     .map(order => ({ order, score: problem.rules.filter(rule => isMet(order, rule)).length }))
     .sort((x, y) => y.score - x.score || x.order.localeCompare(y.order))
@@ -156,11 +175,69 @@ function arrangementChoices(problem, number) {
 }
 
 function numberChoices(problem, number) {
-  const pools = {
-    count: { 2: [1, 2, 3, 4], 4: [2, 3, 4, 6], 6: [4, 5, 6, 8] },
-    minimum: { 3: [2, 3, 4, 5], 4: [2, 3, 4, 5] }
+  const choices = problem.type === "minimum"
+    ? [1, 2, 3, 4]
+    : [Math.max(1, problem.answer - 2), Math.max(1, problem.answer - 1), problem.answer, problem.answer + 1];
+  const uniqueChoices = [...new Set(choices)];
+  for (let candidate = 1; uniqueChoices.length < 4; candidate++)
+    if (!uniqueChoices.includes(candidate)) uniqueChoices.push(candidate);
+  return seededOrder(uniqueChoices, 370 + number * 17);
+}
+
+function renderWorkbench(problem) {
+  const area = document.getElementById("arrangement-workbench");
+  if (problem.type !== "count") {
+    area.hidden = true;
+    area.replaceChildren();
+    return;
+  }
+  area.hidden = false;
+  const heading = document.createElement("p");
+  heading.className = "workbench-heading";
+  heading.textContent = "並べ替えメモ（回答には直接影響しません）";
+  const help = document.createElement("p");
+  help.className = "workbench-help";
+  help.textContent = "パネルをドラッグするか、2枚を順に選んで位置を入れ替えられます。";
+  const panel = document.createElement("div");
+  panel.className = "letter-panel";
+  panel.setAttribute("aria-label", "AからDの並べ替えパネル");
+  let selected = null;
+  let dragged = null;
+  const swap = (first, second) => {
+    const marker = document.createTextNode("");
+    panel.replaceChild(marker, first);
+    panel.replaceChild(first, second);
+    panel.replaceChild(second, marker);
   };
-  return seededOrder(pools[problem.type][problem.answer], 370 + number * 17);
+  for (const letter of LETTERS) {
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "letter-tile";
+    tile.textContent = letter;
+    tile.draggable = true;
+    tile.addEventListener("click", () => {
+      if (!selected) {
+        selected = tile;
+        tile.classList.add("selected");
+      } else if (selected === tile) {
+        tile.classList.remove("selected");
+        selected = null;
+      } else {
+        swap(selected, tile);
+        selected.classList.remove("selected");
+        selected = null;
+      }
+    });
+    tile.addEventListener("dragstart", () => { dragged = tile; tile.classList.add("dragging"); });
+    tile.addEventListener("dragend", () => { tile.classList.remove("dragging"); dragged = null; });
+    tile.addEventListener("dragover", event => event.preventDefault());
+    tile.addEventListener("drop", event => {
+      event.preventDefault();
+      if (dragged && dragged !== tile) swap(dragged, tile);
+    });
+    panel.append(tile);
+  }
+  area.replaceChildren(heading, help, panel);
 }
 
 function makeDiagram(arrangement) {
@@ -224,6 +301,7 @@ function showQuestion() {
     item.textContent = ruleText(rule);
     return item;
   }));
+  renderWorkbench(problem);
   renderChoices(problem);
   document.getElementById("answer-error").textContent = "";
   session.questionStartedAt = new Date().toISOString();

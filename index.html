@@ -20,7 +20,7 @@
         <li>各問題の回答、正誤、回答時間</li>
         <li>テストの開始・終了時刻、テスト版番号</li>
       </ul>
-      <p>所要時間の目安は5〜10分です。回答途中でも、参加をやめることができます。</p>
+      <p>所要時間の目安は5〜8分です。回答途中でも、参加をやめることができます。</p>
     </div>
     <label class="field">参加者ID（配布された番号）
       <input id="participant-id" maxlength="30" autocomplete="off" placeholder="例：P001">
@@ -32,9 +32,11 @@
 
   <section id="question-screen" hidden>
     <header id="question-header"></header>
+    <div id="question-kind" class="question-kind"></div>
     <h1 id="question-title"></h1>
+    <div id="given-arrangement" class="given-arrangement" hidden></div>
     <ol id="conditions"></ol>
-    <p>左を1番目として、条件をすべて満たす配置を1つ選んでください。</p>
+    <p id="question-instruction"></p>
     <div id="answer-fields" class="arrangements" role="radiogroup" aria-label="配置の選択肢"></div>
     <p id="answer-error" class="error" role="alert"></p>
     <div class="actions"><button id="submit-button" type="button">回答を確定 →</button></div>

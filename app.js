@@ -4,56 +4,18 @@ const LETTERS = "ABCD";
 const config = window.TEST_CONFIG || {};
 const answerArea = document.getElementById("answer-fields");
 
+const TEST_VERSION = "placement-set1-v3.0";
 const PROBLEMS = [
-  {
-    type: "arrangement", answer: "BACD",
-    rules: [R("left", "B", "A"), R("right", "D", "C"), R("left", "A", "C")],
-    choices: ["BACD", "ABCD", "BADC", "BCAD"]
-  },
-  {
-    type: "arrangement", answer: "CADB",
-    rules: [R("adjacent", "C", "A"), R("notAdjacent", "B", "A"),
-      R("left", "D", "B"), R("notLeft", "A", "C"), R("notLeft", "D", "C")]
-  },
-  {
-    type: "arrangement", answer: "DBAC",
-    rules: [R("immediateLeft", "B", "A"), R("right", "A", "D"),
-      R("right", "C", "B")],
-    choices: ["DBAC", "BDCA", "BACD", "CDBA"]
-  },
-  {
-    type: "arrangement", answer: "ACDB",
-    rules: [R("left", "A", "B"), R("notAdjacent", "A", "B"),
-      R("adjacent", "C", "D"), R("notPosition", "C", 3)],
-    choices: ["ACDB", "BADC", "ACBD", "ADCB"]
-  },
-  {
-    type: "count", answer: 3,
-    rules: [R("position", "A", 1), R("right", "B", "C")]
-  },
-  {
-    type: "count", answer: 5,
-    rules: [R("right", "D", "A"), R("notPosition", "B", 4), R("adjacent", "B", "C")]
-  },
-  {
-    type: "count", answer: 2,
-    rules: [R("between", "B", "A", "D"), R("right", "C", "A"), R("position", "D", 4)]
-  },
-  {
-    type: "minimum", arrangement: "BACD", answer: 3,
-    rules: [R("position", "B", 1), R("immediateRight", "A", "B"),
-      R("right", "D", "C"), R("adjacent", "A", "C"), R("notAdjacent", "B", "C")]
-  },
-  {
-    type: "minimum", arrangement: "CADB", answer: 3,
-    rules: [R("between", "A", "C", "D"), R("immediateLeft", "C", "A"),
-      R("right", "B", "D"), R("notPosition", "D", 1), R("adjacent", "A", "D")]
-  },
-  {
-    type: "minimum", arrangement: "DBAC", answer: 3,
-    rules: [R("right", "A", "B"), R("position", "D", 1),
-      R("between", "B", "D", "C"), R("notAdjacent", "A", "D"), R("immediateLeft", "B", "A")]
-  }
+ {type:"arrangement", answer:"BACD", rules:[R("left","B","A"),R("right","D","C"),R("left","A","C")], choices:["BACD","ABCD","BADC","BCAD"]},
+ {type:"arrangement", answer:"CADB", rules:[R("left","C","A"),R("right","D","A"),R("left","D","B")], choices:["CADB","ACDB","CDAB","CABD"]},
+ {type:"arrangement", answer:"DBAC", rules:[R("immediateLeft","B","A"),R("right","A","D"),R("right","C","B")], choices:["DBAC","BDCA","BACD","CDBA"]},
+ {type:"arrangement", answer:"ACDB", rules:[R("left","A","B"),R("notAdjacent","A","B"),R("adjacent","C","D"),R("notPosition","C",3)], choices:["ACDB", "ABCD", "ACBD", "BADC"]},
+ {type:"arrangement", answer:"BDCA", rules:[R("position","B",1),R("between","D","B","C"),R("right","A","C")], choices:["BDCA","DBCA","BCDA","BDAC"]},
+ {type:"minimum", arrangement:"BACD", givenRules:[R("position","B",1)], rules:[R("immediateRight","A","B"),R("right","D","C"),R("notAdjacent","B","C"),R("left","A","D")], answer:2},
+ {type:"minimum", arrangement:"CADB", givenRules:[R("immediateLeft","C","A")], rules:[R("between","A","C","D"),R("right","B","D"),R("notPosition","D",1),R("adjacent","A","D")], answer:2},
+ {type:"minimum", arrangement:"DBAC", givenRules:[R("position","D",1)], rules:[R("right","A","B"),R("between","B","D","C"),R("notAdjacent","A","D"),R("immediateLeft","B","A")], answer:2},
+ {type:"minimum", arrangement:"ABDC", givenRules:[R("position","A",1),R("position","C",4)], rules:[R("left","B","D"),R("adjacent","A","B"),R("notPosition","D",2),R("right","D","A")], answer:1},
+ {type:"minimum", arrangement:"DCAB", givenRules:[R("right","A","C")], rules:[R("left","D","C"),R("left","A","B"),R("adjacent","C","A"),R("notAdjacent","D","A")], answer:2}
 ];
 
 let session = null;
@@ -119,10 +81,10 @@ function combinations(items, size, start = 0, chosen = [], output = []) {
   return output;
 }
 
-function minimumRulesFor(arrangement, rules) {
-  for (let size = 1; size <= rules.length; size++)
+function minimumRulesFor(arrangement, rules, givenRules = []) {
+  for (let size = 0; size <= rules.length; size++)
     if (combinations(rules, size).some(subset => {
-      const found = solutions(subset);
+      const found = solutions([...givenRules, ...subset]);
       return found.length === 1 && found[0] === arrangement;
     })) return size;
   return null;
@@ -142,13 +104,16 @@ function validateProblems() {
             throw new Error(`問${index + 1}: 文章${ruleIndex + 1}が選択肢の絞り込みに使われていません`);
         });
       }
+      const excluded = problem.rules.map(rule => problem.choices.filter(choice => !isMet(choice, rule)).sort().join(","));
+      if (new Set(excluded).size !== excluded.length)
+        throw new Error(`問${index + 1}: 除外対象が重複しています`);
     } else if (problem.type === "count") {
       if (solutions(problem.rules).length !== problem.answer)
         throw new Error(`問${index + 1}: 成立数が一致しません`);
     } else {
-      if (!problem.rules.every(rule => isMet(problem.arrangement, rule)))
+      if (![...problem.givenRules, ...problem.rules].every(rule => isMet(problem.arrangement, rule)))
         throw new Error(`問${index + 1}: 提示文に成立しないものがあります`);
-      if (minimumRulesFor(problem.arrangement, problem.rules) !== problem.answer)
+      if (minimumRulesFor(problem.arrangement, problem.rules, problem.givenRules) !== problem.answer)
         throw new Error(`問${index + 1}: 最小文章数が一致しません`);
     }
   });
@@ -176,7 +141,7 @@ function arrangementChoices(problem, number) {
 
 function numberChoices(problem, number) {
   const choices = problem.type === "minimum"
-    ? [1, 2, 3, 4]
+    ? [0, 1, 2, 3]
     : [Math.max(1, problem.answer - 2), Math.max(1, problem.answer - 1), problem.answer, problem.answer + 1];
   const uniqueChoices = [...new Set(choices)];
   for (let candidate = 1; uniqueChoices.length < 4; candidate++)
@@ -266,7 +231,7 @@ function renderChoices(problem) {
     radio.setAttribute("aria-label", problem.type === "arrangement"
       ? `選択肢${index + 1}、左から${choice.split("").join("、")}`
       : `選択肢${index + 1}、${choice}`);
-    label.append(radio, problem.type === "arrangement" ? makeDiagram(choice) : document.createTextNode(`${choice}`));
+    label.append(radio, problem.type === "arrangement" ? makeDiagram(choice) : document.createTextNode(problem.type === "minimum" ? `あと${choice}文章` : `${choice}`));
     answerArea.append(label);
   });
 }
@@ -289,11 +254,30 @@ function showQuestion() {
     instruction.textContent = "A・B・C・Dを1回ずつ使う場合の、成立する並び方の合計を選んでください。";
     given.hidden = true;
   } else {
-    kind.textContent = "種類3：必要な文章の最小数を答える";
-    title.textContent = "提示された配置を一意に決めるには、文章が最低いくつ必要ですか。";
-    instruction.textContent = "下の文章は、すべて提示された配置に当てはまります。その中から必要な文章を自由に選ぶとき、配置を1通りに決められる最小の文章数を選んでください。";
+    kind.textContent = "種類3：追加で必要な文章の最小数";
+    title.textContent = "提示された配置を1通りに決めるには、最低あと何文章必要ですか。";
+    instruction.textContent = "A～Dを1回ずつ使い、左を1番目とします。採用済みの文章は必ず使います。下の候補から追加する最小の文章数を選んでください。候補はすべて提示配置に当てはまります。「間」は直隣を意味しません。";
     given.replaceChildren(makeDiagram(problem.arrangement));
     given.hidden = false;
+  }
+  let hints = document.getElementById("given-rules");
+  if (!hints) {
+    hints = document.createElement("div");
+    hints.id = "given-rules";
+    hints.className = "notice";
+    document.getElementById("conditions").before(hints);
+  }
+  hints.hidden = problem.type !== "minimum";
+  hints.replaceChildren();
+  if (problem.type === "minimum") {
+    const heading = document.createElement("strong");
+    heading.textContent = "採用済みの文章（回答の文章数には含めません）";
+    const ul = document.createElement("ul");
+    for (const rule of problem.givenRules) {
+      const li = document.createElement("li"); li.textContent = ruleText(rule); ul.append(li);
+    }
+    const label = document.createElement("strong"); label.textContent = "追加する文章の候補";
+    hints.append(heading, ul, label);
   }
   const list = document.getElementById("conditions");
   list.replaceChildren(...problem.rules.map(rule => {
@@ -322,7 +306,7 @@ document.getElementById("start-button").addEventListener("click", () => {
   }
   session = {
     sessionId: createSessionId(), participantId,
-    testVersion: config.testVersion || "unknown",
+    testVersion: TEST_VERSION,
     testStartedAt: new Date().toISOString()
   };
   document.getElementById("start-screen").hidden = true;
@@ -340,7 +324,7 @@ document.getElementById("submit-button").addEventListener("click", () => {
   const correctAnswer = String(problem.answer);
   results.push({
     questionNumber: questionIndex + 1,
-    questionId: `S1-Q${String(questionIndex + 1).padStart(2, "0")}`,
+    questionId: `V3-S1-Q${String(questionIndex + 1).padStart(2, "0")}`,
     questionType: problem.type,
     startedAt: session.questionStartedAt,
     answeredAt: new Date().toISOString(),
@@ -348,7 +332,7 @@ document.getElementById("submit-button").addEventListener("click", () => {
     correctAnswer,
     isCorrect: selected.value === correctAnswer ? 1 : 0,
     responseTimeMs: Math.round(performance.now() - session.questionStartClock),
-    conditions: problem.rules.map(ruleText).join(" / "),
+    conditions: (problem.givenRules ? "採用済み: " + problem.givenRules.map(ruleText).join(" / ") + " | 追加候補: " : "") + problem.rules.map(ruleText).join(" / "),
     givenArrangement: problem.arrangement || ""
   });
   questionIndex++;

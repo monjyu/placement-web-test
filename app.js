@@ -4,12 +4,12 @@ const LETTERS = "ABCD";
 const config = window.TEST_CONFIG || {};
 const answerArea = document.getElementById("answer-fields");
 
-const TEST_VERSION = "placement-set1-v3.0";
+const TEST_VERSION = "placement-set1-v3.1";
 const PROBLEMS = [
  {type:"arrangement", answer:"BACD", rules:[R("left","B","A"),R("right","D","C"),R("left","A","C")], choices:["BACD","ABCD","BADC","BCAD"]},
  {type:"arrangement", answer:"CADB", rules:[R("left","C","A"),R("right","D","A"),R("left","D","B")], choices:["CADB","ACDB","CDAB","CABD"]},
  {type:"arrangement", answer:"DBAC", rules:[R("immediateLeft","B","A"),R("right","A","D"),R("right","C","B")], choices:["DBAC","BDCA","BACD","CDBA"]},
- {type:"arrangement", answer:"ACDB", rules:[R("left","A","B"),R("notAdjacent","A","B"),R("adjacent","C","D"),R("notPosition","C",3)], choices:["ACDB", "ABCD", "ACBD", "BADC"]},
+ {type:"arrangement", answer:"ACDB", rules:[R("left","A","B"),R("notAdjacent","A","B"),R("adjacent","C","D")], choices:["ACDB", "ABCD", "ACBD", "BADC"]},
  {type:"arrangement", answer:"BDCA", rules:[R("position","B",1),R("between","D","B","C"),R("right","A","C")], choices:["BDCA","DBCA","BCDA","BDAC"]},
  {type:"minimum", arrangement:"BACD", givenRules:[R("position","B",1)], rules:[R("immediateRight","A","B"),R("right","D","C"),R("notAdjacent","B","C"),R("left","A","D")], answer:2},
  {type:"minimum", arrangement:"CADB", givenRules:[R("immediateLeft","C","A")], rules:[R("between","A","C","D"),R("right","B","D"),R("notPosition","D",1),R("adjacent","A","D")], answer:2},
@@ -63,8 +63,8 @@ function ruleText(rule) {
   if (rule.type === "adjacent") return `${rule.a}と${rule.b}は隣り合っている。`;
   if (rule.type === "notAdjacent") return `${rule.a}と${rule.b}は隣り合っていない。`;
   if (rule.type === "between") return `${rule.a}は${rule.b}と${rule.c}の間にある。`;
-  if (rule.type === "position") return `${rule.a}は${rule.b}番目である。`;
-  return `${rule.a}は${rule.b}番目ではない。`;
+  if (rule.type === "position") return `${rule.a}は左から${rule.b}番目である。`;
+  return `${rule.a}は左から${rule.b}番目ではない。`;
 }
 
 function solutions(rules) {
@@ -93,7 +93,7 @@ function minimumRulesFor(arrangement, rules, givenRules = []) {
 function validateProblems() {
   PROBLEMS.forEach((problem, index) => {
     if (problem.type === "arrangement") {
-      const found = solutions(problem.rules);
+      const found = (problem.choices || ALL_ORDERS).filter(order => problem.rules.every(rule => isMet(order, rule)));
       if (found.length !== 1 || found[0] !== problem.answer)
         throw new Error(`問${index + 1}: 正解が一意ではありません`);
       if (problem.choices) {
@@ -140,6 +140,7 @@ function arrangementChoices(problem, number) {
 }
 
 function numberChoices(problem, number) {
+  if (problem.type === "minimum") return [0, 1, 2, 3];
   const choices = problem.type === "minimum"
     ? [0, 1, 2, 3]
     : [Math.max(1, problem.answer - 2), Math.max(1, problem.answer - 1), problem.answer, problem.answer + 1];
@@ -254,7 +255,7 @@ function showQuestion() {
     instruction.textContent = "A・B・C・Dを1回ずつ使う場合の、成立する並び方の合計を選んでください。";
     given.hidden = true;
   } else {
-    kind.textContent = "種類3：追加で必要な文章の最小数";
+    kind.textContent = "種類2：追加で必要な文章の最小数";
     title.textContent = "提示された配置を1通りに決めるには、最低あと何文章必要ですか。";
     instruction.textContent = "A～Dを1回ずつ使い、左を1番目とします。採用済みの文章は必ず使います。下の候補から追加する最小の文章数を選んでください。候補はすべて提示配置に当てはまります。「間」は直隣を意味しません。";
     given.replaceChildren(makeDiagram(problem.arrangement));

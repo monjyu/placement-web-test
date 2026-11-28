@@ -4,7 +4,7 @@ const LETTERS = "ABCD";
 const config = window.TEST_CONFIG || {};
 const answerArea = document.getElementById("answer-fields");
 
-const TEST_VERSION = "placement-set1-v3.1";
+const TEST_VERSION = "placement-web-unityset-v1.0";
 const PROBLEMS = [
  {type:"arrangement", answer:"BACD", rules:[R("left","B","A"),R("right","D","C"),R("left","A","C")], choices:["BACD","ABCD","BADC","BCAD"]},
  {type:"arrangement", answer:"CADB", rules:[R("left","C","A"),R("right","D","A"),R("left","D","B")], choices:["CADB","ACDB","CDAB","CABD"]},
@@ -91,31 +91,21 @@ function minimumRulesFor(arrangement, rules, givenRules = []) {
 }
 
 function validateProblems() {
+  if (PROBLEMS.length !== 10)
+    throw new Error("問題数が10問ではありません。");
+
   PROBLEMS.forEach((problem, index) => {
-    if (problem.type === "arrangement") {
-      const found = (problem.choices || ALL_ORDERS).filter(order => problem.rules.every(rule => isMet(order, rule)));
-      if (found.length !== 1 || found[0] !== problem.answer)
-        throw new Error(`問${index + 1}: 正解が一意ではありません`);
-      if (problem.choices) {
-        if (new Set(problem.choices).size !== 4 || !problem.choices.includes(problem.answer))
-          throw new Error(`問${index + 1}: 選択肢の設定が不正です`);
-        problem.rules.forEach((rule, ruleIndex) => {
-          if (problem.choices.filter(choice => choice !== problem.answer).every(choice => isMet(choice, rule)))
-            throw new Error(`問${index + 1}: 文章${ruleIndex + 1}が選択肢の絞り込みに使われていません`);
-        });
-      }
-      const excluded = problem.rules.map(rule => problem.choices.filter(choice => !isMet(choice, rule)).sort().join(","));
-      if (new Set(excluded).size !== excluded.length)
-        throw new Error(`問${index + 1}: 除外対象が重複しています`);
-    } else if (problem.type === "count") {
-      if (solutions(problem.rules).length !== problem.answer)
-        throw new Error(`問${index + 1}: 成立数が一致しません`);
-    } else {
-      if (![...problem.givenRules, ...problem.rules].every(rule => isMet(problem.arrangement, rule)))
-        throw new Error(`問${index + 1}: 提示文に成立しないものがあります`);
-      if (minimumRulesFor(problem.arrangement, problem.rules, problem.givenRules) !== problem.answer)
-        throw new Error(`問${index + 1}: 最小文章数が一致しません`);
-    }
+    const choices = problem.choices;
+
+    if (choices.length !== 4 || new Set(choices).size !== 4)
+      throw new Error(`問${index + 1}：選択肢を確認してください。`);
+
+    const matches = choices.filter(choice =>
+      problem.rules.every(rule => isMet(choice, rule))
+    );
+
+    if (matches.length !== 1 || matches[0] !== problem.answer)
+      throw new Error(`問${index + 1}：正答が一致しません。`);
   });
 }
 
@@ -130,13 +120,8 @@ function seededOrder(items, seed) {
   return result;
 }
 
-function arrangementChoices(problem, number) {
-  if (problem.choices) return seededOrder(problem.choices, 910 + number * 23);
-  const distractors = ALL_ORDERS.filter(order => order !== problem.answer)
-    .map(order => ({ order, score: problem.rules.filter(rule => isMet(order, rule)).length }))
-    .sort((x, y) => y.score - x.score || x.order.localeCompare(y.order))
-    .slice(0, 3).map(item => item.order);
-  return seededOrder([problem.answer, ...distractors], 910 + number * 23);
+function arrangementChoices(problem) {
+  return [...problem.choices];
 }
 
 function numberChoices(problem, number) {
@@ -245,9 +230,9 @@ function showQuestion() {
   const given = document.getElementById("given-arrangement");
   document.getElementById("question-header").textContent = `配置問題　問題1　　${questionIndex + 1} / 10`;
   if (problem.type === "arrangement") {
-    kind.textContent = "種類1：正しい配置を選ぶ";
+    kind.textContent = "正しい配置を選ぶ";
     title.textContent = "A・B・C・Dを、左から順に1つずつ配置してください。";
-    instruction.textContent = "左を1番目として、条件をすべて満たす配置を1つ選んでください。";
+    instruction.textContent ="左を1番目として、条件をすべて満たす配置を1つ選んでください。「間にある」は、すぐ隣に限定しません。";
     given.hidden = true;
   } else if (problem.type === "count") {
     kind.textContent = "種類2：成立する配置の数を答える";

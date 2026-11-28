@@ -11,11 +11,11 @@ const PROBLEMS = [
  {type:"arrangement", answer:"DBAC", rules:[R("immediateLeft","B","A"),R("right","A","D"),R("right","C","B")], choices:["DBAC","BDCA","BACD","CDBA"]},
  {type:"arrangement", answer:"ACDB", rules:[R("left","A","B"),R("notAdjacent","A","B"),R("adjacent","C","D")], choices:["ACDB", "ABCD", "ACBD", "BADC"]},
  {type:"arrangement", answer:"BDCA", rules:[R("position","B",1),R("between","D","B","C"),R("right","A","C")], choices:["BDCA","DBCA","BCDA","BDAC"]},
- {type:"minimum", arrangement:"BACD", givenRules:[R("position","B",1)], rules:[R("immediateRight","A","B"),R("right","D","C"),R("notAdjacent","B","C"),R("left","A","D")], answer:2},
- {type:"minimum", arrangement:"CADB", givenRules:[R("immediateLeft","C","A")], rules:[R("between","A","C","D"),R("right","B","D"),R("notPosition","D",1),R("adjacent","A","D")], answer:2},
- {type:"minimum", arrangement:"DBAC", givenRules:[R("position","D",1)], rules:[R("right","A","B"),R("between","B","D","C"),R("notAdjacent","A","D"),R("immediateLeft","B","A")], answer:2},
- {type:"minimum", arrangement:"ABDC", givenRules:[R("position","A",1),R("position","C",4)], rules:[R("left","B","D"),R("adjacent","A","B"),R("notPosition","D",2),R("right","D","A")], answer:1},
- {type:"minimum", arrangement:"DCAB", givenRules:[R("right","A","C")], rules:[R("left","D","C"),R("left","A","B"),R("adjacent","C","A"),R("notAdjacent","D","A")], answer:2}
+ {type:"arrangement", answer:"DBCA", rules:[R("right","A","C"),R("immediateRight","C","B"),R("left","D","B")], choices:["DABC","DBCA","DCAB","BCAD"]},
+ {type:"arrangement", answer:"DCAB", rules:[R("position","C",2),R("right","A","D"),R("notAdjacent","B","C")], choices:["ACDB","BDAC","DCAB","DCBA"]},
+ {type:"arrangement", answer:"ABDC", rules:[R("adjacent","A","B"),R("right","B","A"),R("position","B",2),R("between","D","A","C")], choices:["ABDC","ABCD","ACBD","BADC"]},
+ {type:"arrangement", answer:"CBDA", rules:[R("notAdjacent","A","B"),R("adjacent","A","D"),R("left","B","A"),R("notPosition","B",1)], choices:["CBAD","BDAC","BADC","CBDA"]},
+ {type:"arrangement", answer:"DACB", rules:[R("notAdjacent","A","B"),R("right","A","D"),R("adjacent","B","C"),R("notPosition","A",4)], choices:["ABCD","DACB","ACDB","BCDA"]}
 ];
 
 let session = null;
